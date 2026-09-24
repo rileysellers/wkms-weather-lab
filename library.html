@@ -1,0 +1,2200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Weather Library | WKMS Weather Lab</title>
+
+<style>
+
+/* =========================================================
+   WKMS WEATHER LAB — STATION 01
+   WEATHER LIBRARY / ATMOSPHERIC ARCHIVES
+   ========================================================= */
+
+:root {
+  --night: #03111f;
+  --deep: #071b2d;
+  --blue: #0c2b45;
+  --panel: #103650;
+  --panel-light: #17445f;
+
+  --sky: #78ddff;
+  --sky-soft: #c9f2ff;
+  --green: #71e2bd;
+  --amber: #ffd166;
+
+  --paper: #f1ead8;
+  --paper-dark: #d9cdb0;
+  --ink: #182532;
+
+  --white: #f7fcff;
+  --soft: #d2e1e9;
+  --muted: #9db7c5;
+
+  --line: rgba(120,221,255,.22);
+}
+
+
+/* =========================================================
+   RESET
+   ========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+
+  min-height: 100vh;
+
+  overflow-x: hidden;
+
+  color: var(--white);
+
+  font-family:
+    Arial,
+    Helvetica,
+    sans-serif;
+
+  line-height: 1.6;
+
+  background:
+    linear-gradient(
+      180deg,
+      #071c31 0%,
+      #061827 45%,
+      #03111f 100%
+    );
+}
+
+a {
+  color: inherit;
+}
+
+button,
+a {
+  font: inherit;
+}
+
+a:focus-visible,
+button:focus-visible {
+  outline: 4px solid var(--amber);
+  outline-offset: 5px;
+}
+
+
+/* =========================================================
+   ACCESSIBILITY
+   ========================================================= */
+
+.skip-link {
+  position: fixed;
+
+  top: -100px;
+  left: 20px;
+
+  z-index: 9999;
+
+  padding: 12px 18px;
+
+  color: #00131f;
+  background: var(--amber);
+
+  border-radius: 0 0 8px 8px;
+
+  font-weight: 900;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+
+/* =========================================================
+   PAGE
+   ========================================================= */
+
+.site {
+  position: relative;
+
+  min-height: 100vh;
+
+  overflow: hidden;
+}
+
+
+/* subtle library-grid blueprint */
+
+.site::before {
+  content: "";
+
+  position: absolute;
+  inset: 0;
+
+  pointer-events: none;
+
+  opacity: .08;
+
+  background-image:
+    linear-gradient(
+      rgba(120,221,255,.15) 1px,
+      transparent 1px
+    ),
+    linear-gradient(
+      90deg,
+      rgba(120,221,255,.15) 1px,
+      transparent 1px
+    );
+
+  background-size: 55px 55px;
+}
+
+
+/* =========================================================
+   STORM WINDOWS
+   ========================================================= */
+
+.sky {
+  position: absolute;
+
+  top: 0;
+  left: 0;
+
+  width: 100%;
+  height: 700px;
+
+  overflow: hidden;
+
+  pointer-events: none;
+
+  background:
+    radial-gradient(
+      circle at 75% 16%,
+      rgba(120,221,255,.15),
+      transparent 23%
+    );
+}
+
+.cloud {
+  position: absolute;
+
+  width: 260px;
+  height: 72px;
+
+  left: -350px;
+
+  border-radius: 100px;
+
+  opacity: .35;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(238,249,255,.85),
+      rgba(142,179,201,.42)
+    );
+
+  filter:
+    drop-shadow(
+      0 16px 20px
+      rgba(0,0,0,.15)
+    );
+
+  animation:
+    drift 50s linear infinite;
+}
+
+.cloud::before,
+.cloud::after {
+  content: "";
+
+  position: absolute;
+
+  border-radius: 50%;
+
+  background: inherit;
+}
+
+.cloud::before {
+  width: 105px;
+  height: 105px;
+
+  left: 40px;
+  bottom: 17px;
+}
+
+.cloud::after {
+  width: 135px;
+  height: 135px;
+
+  right: 35px;
+  bottom: 8px;
+}
+
+.cloud-one {
+  top: 180px;
+}
+
+.cloud-two {
+  top: 360px;
+
+  transform: scale(.7);
+
+  opacity: .2;
+
+  animation-duration: 68s;
+  animation-delay: 10s;
+}
+
+.cloud-three {
+  top: 90px;
+
+  transform: scale(.5);
+
+  opacity: .25;
+
+  animation-duration: 42s;
+  animation-delay: 22s;
+}
+
+
+/* =========================================================
+   WRAPPER
+   ========================================================= */
+
+.wrapper {
+  position: relative;
+
+  z-index: 3;
+
+  width: 100%;
+
+  padding:
+    25px
+    clamp(20px, 5vw, 90px)
+    70px;
+}
+
+
+/* =========================================================
+   NAVIGATION
+   ========================================================= */
+
+.topbar {
+  display: flex;
+
+  align-items: center;
+  justify-content: space-between;
+
+  gap: 20px;
+
+  flex-wrap: wrap;
+
+  padding-bottom: 15px;
+
+  border-bottom:
+    1px solid
+    rgba(255,255,255,.15);
+}
+
+.breadcrumb {
+  display: flex;
+
+  gap: 10px;
+
+  flex-wrap: wrap;
+
+  color: var(--sky);
+
+  font-size: .7rem;
+  font-weight: 900;
+
+  letter-spacing: 1.7px;
+}
+
+.breadcrumb a {
+  text-decoration: none;
+}
+
+.breadcrumb a:hover {
+  text-decoration: underline;
+}
+
+.controls {
+  display: flex;
+
+  gap: 8px;
+}
+
+.control {
+  min-height: 44px;
+
+  padding: 9px 14px;
+
+  color: var(--white);
+
+  cursor: pointer;
+
+  background:
+    rgba(255,255,255,.06);
+
+  border:
+    1px solid
+    rgba(120,221,255,.25);
+
+  border-radius: 8px;
+
+  font-weight: 800;
+}
+
+.control:hover {
+  background:
+    rgba(120,221,255,.12);
+}
+
+
+/* =========================================================
+   HERO
+   ========================================================= */
+
+.hero {
+  display: grid;
+
+  grid-template-columns:
+    minmax(0, 1.4fr)
+    minmax(300px, .6fr);
+
+  gap: 50px;
+
+  align-items: center;
+
+  min-height: 570px;
+
+  padding:
+    70px
+    0;
+}
+
+.station {
+  margin-bottom: 12px;
+
+  color: var(--sky);
+
+  font-size: .72rem;
+  font-weight: 900;
+
+  letter-spacing: 3px;
+}
+
+.hero h1 {
+  margin: 0;
+
+  font-size:
+    clamp(
+      4rem,
+      9vw,
+      8rem
+    );
+
+  line-height: .82;
+
+  letter-spacing: -5px;
+
+  text-transform: uppercase;
+}
+
+.hero h1 span {
+  color: var(--sky-soft);
+}
+
+.hero-copy {
+  max-width: 720px;
+
+  margin:
+    28px
+    0
+    0;
+
+  color: var(--soft);
+
+  font-size:
+    clamp(
+      1rem,
+      2vw,
+      1.35rem
+    );
+}
+
+
+/* =========================================================
+   LIBRARY CARD CATALOG VISUAL
+   ========================================================= */
+
+.catalog {
+  position: relative;
+
+  max-width: 400px;
+
+  margin-left: auto;
+
+  padding:
+    24px;
+
+  transform:
+    rotate(2deg);
+
+  color: var(--ink);
+
+  background:
+    var(--paper);
+
+  border-radius: 4px;
+
+  box-shadow:
+    16px 22px 0
+    rgba(0,0,0,.16);
+
+  transition:
+    transform .3s ease;
+}
+
+.catalog:hover {
+  transform:
+    rotate(0deg)
+    translateY(-6px);
+}
+
+.catalog::before {
+  content: "";
+
+  position: absolute;
+
+  top: 42px;
+  left: 0;
+  right: 0;
+
+  height: 1px;
+
+  background:
+    rgba(24,37,50,.2);
+
+  box-shadow:
+    0 32px 0 rgba(24,37,50,.13),
+    0 64px 0 rgba(24,37,50,.13),
+    0 96px 0 rgba(24,37,50,.13),
+    0 128px 0 rgba(24,37,50,.13),
+    0 160px 0 rgba(24,37,50,.13);
+}
+
+.catalog-label,
+.catalog h2,
+.catalog p,
+.catalog-code {
+  position: relative;
+
+  z-index: 2;
+}
+
+.catalog-label {
+  font-family:
+    "Courier New",
+    monospace;
+
+  font-size: .7rem;
+  font-weight: 900;
+
+  letter-spacing: 2px;
+}
+
+.catalog h2 {
+  margin:
+    30px
+    0
+    10px;
+
+  font-family:
+    Georgia,
+    serif;
+
+  font-size:
+    2rem;
+
+  line-height: 1.05;
+}
+
+.catalog p {
+  font-family:
+    "Courier New",
+    monospace;
+
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.catalog-code {
+  display: inline-block;
+
+  margin-top: 20px;
+
+  padding:
+    6px
+    9px;
+
+  color: var(--paper);
+
+  background: var(--ink);
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  font-size: .72rem;
+  font-weight: 900;
+}
+
+
+/* =========================================================
+   QUICK NAV
+   ========================================================= */
+
+.quick-nav {
+  display: flex;
+
+  gap: 10px;
+
+  flex-wrap: wrap;
+
+  margin-bottom: 60px;
+}
+
+.quick-nav a {
+  padding:
+    10px
+    14px;
+
+  color: var(--sky-soft);
+
+  background:
+    rgba(120,221,255,.06);
+
+  border:
+    1px solid
+    rgba(120,221,255,.2);
+
+  border-radius: 100px;
+
+  font-size: .7rem;
+  font-weight: 900;
+
+  letter-spacing: 1px;
+
+  text-decoration: none;
+
+  transition:
+    background .2s ease,
+    transform .2s ease;
+}
+
+.quick-nav a:hover {
+  transform:
+    translateY(-2px);
+
+  background:
+    rgba(120,221,255,.14);
+}
+
+
+/* =========================================================
+   SECTION HEADERS
+   ========================================================= */
+
+.section-header {
+  margin:
+    75px
+    0
+    28px;
+}
+
+.section-code {
+  color: var(--sky);
+
+  font-size: .67rem;
+  font-weight: 900;
+
+  letter-spacing: 2px;
+}
+
+.section-header h2 {
+  margin:
+    5px
+    0
+    8px;
+
+  font-size:
+    clamp(
+      2rem,
+      4vw,
+      3.3rem
+    );
+
+  line-height: 1.1;
+}
+
+.section-header p {
+  max-width: 800px;
+
+  margin: 0;
+
+  color: var(--muted);
+}
+
+
+/* =========================================================
+   SHELF
+   ========================================================= */
+
+.shelf {
+  position: relative;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(0, 1fr)
+    );
+
+  gap: 18px;
+
+  padding-bottom: 35px;
+}
+
+.shelf::after {
+  content: "";
+
+  position: absolute;
+
+  left: -10px;
+  right: -10px;
+  bottom: 8px;
+
+  height: 17px;
+
+  border-radius: 3px;
+
+  background:
+    linear-gradient(
+      180deg,
+      #755033,
+      #392417
+    );
+
+  box-shadow:
+    0 9px 15px
+    rgba(0,0,0,.35);
+}
+
+
+/* =========================================================
+   BOOK RESOURCE CARDS
+   ========================================================= */
+
+.book {
+  position: relative;
+
+  z-index: 2;
+
+  display: flex;
+  flex-direction: column;
+
+  min-height: 400px;
+
+  overflow: hidden;
+
+  padding:
+    26px;
+
+  color: var(--white);
+
+  text-decoration: none;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(20,63,91,.98),
+      rgba(6,27,44,.99)
+    );
+
+  border:
+    1px solid
+    rgba(120,221,255,.2);
+
+  border-radius:
+    5px
+    13px
+    13px
+    5px;
+
+  box-shadow:
+    inset 8px 0 0
+    rgba(0,0,0,.16),
+
+    0 15px 30px
+    rgba(0,0,0,.25);
+
+  transition:
+    transform .25s ease,
+    border-color .25s ease,
+    box-shadow .25s ease;
+}
+
+.book:hover,
+.book:focus-visible {
+  transform:
+    translateY(-12px)
+    rotate(-1deg);
+
+  border-color:
+    var(--sky);
+
+  box-shadow:
+    inset 8px 0 0
+    rgba(0,0,0,.16),
+
+    0 24px 40px
+    rgba(0,0,0,.38);
+}
+
+.book-number {
+  position: absolute;
+
+  top: -18px;
+  right: 12px;
+
+  color:
+    rgba(120,221,255,.07);
+
+  font-size: 7rem;
+  font-weight: 900;
+
+  line-height: 1;
+}
+
+.call-number {
+  position: relative;
+
+  z-index: 2;
+
+  align-self: flex-start;
+
+  margin-bottom: 25px;
+
+  padding:
+    6px
+    9px;
+
+  color: #001622;
+
+  background: var(--paper);
+
+  border-radius: 3px;
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  font-size: .67rem;
+  font-weight: 900;
+}
+
+.resource-type {
+  position: relative;
+
+  z-index: 2;
+
+  margin-bottom: 7px;
+
+  color: var(--green);
+
+  font-size: .63rem;
+  font-weight: 900;
+
+  letter-spacing: 1.7px;
+}
+
+.book h3 {
+  position: relative;
+
+  z-index: 2;
+
+  margin:
+    0
+    0
+    7px;
+
+  font-size: 1.4rem;
+
+  line-height: 1.2;
+}
+
+.author {
+  position: relative;
+
+  z-index: 2;
+
+  margin-bottom: 17px;
+
+  color: var(--sky-soft);
+
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.annotation {
+  position: relative;
+
+  z-index: 2;
+
+  flex-grow: 1;
+
+  margin: 0;
+
+  color: var(--muted);
+
+  font-size: .88rem;
+}
+
+.best-for {
+  position: relative;
+
+  z-index: 2;
+
+  margin-top: 20px;
+
+  padding-top: 14px;
+
+  border-top:
+    1px solid
+    rgba(255,255,255,.12);
+
+  color: var(--soft);
+
+  font-size: .75rem;
+}
+
+.best-for strong {
+  color: var(--amber);
+
+  font-size: .65rem;
+
+  letter-spacing: 1px;
+}
+
+
+/* =========================================================
+   PLACEHOLDER STATE
+   ========================================================= */
+
+.placeholder {
+  border-style: dashed;
+}
+
+.placeholder .call-number {
+  color: var(--muted);
+
+  background:
+    rgba(255,255,255,.1);
+}
+
+.placeholder h3 {
+  color: var(--sky-soft);
+}
+
+
+/* =========================================================
+   DEWEY WEATHER MAP
+   ========================================================= */
+
+.dewey-panel {
+  position: relative;
+
+  overflow: hidden;
+
+  padding:
+    clamp(
+      25px,
+      5vw,
+      45px
+    );
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(15,53,79,.96),
+      rgba(5,25,42,.98)
+    );
+
+  border:
+    1px solid
+    rgba(120,221,255,.23);
+
+  border-radius: 16px;
+}
+
+.dewey-panel::after {
+  content: "DEWEY";
+
+  position: absolute;
+
+  right: -12px;
+  bottom: -40px;
+
+  color:
+    rgba(120,221,255,.035);
+
+  font-size:
+    clamp(
+      6rem,
+      16vw,
+      13rem
+    );
+
+  font-weight: 900;
+
+  line-height: 1;
+}
+
+.dewey-grid {
+  position: relative;
+
+  z-index: 2;
+
+  display: grid;
+
+  grid-template-columns:
+    repeat(
+      3,
+      minmax(0, 1fr)
+    );
+
+  gap: 13px;
+
+  margin-top: 25px;
+}
+
+.dewey {
+  padding:
+    20px;
+
+  background:
+    rgba(255,255,255,.04);
+
+  border-left:
+    4px solid
+    var(--sky);
+
+  border-radius: 4px;
+}
+
+.dewey-code {
+  color: var(--sky);
+
+  font-family:
+    "Courier New",
+    monospace;
+
+  font-size: 1.5rem;
+  font-weight: 900;
+}
+
+.dewey h3 {
+  margin:
+    5px
+    0;
+
+  font-size: 1rem;
+}
+
+.dewey p {
+  margin: 0;
+
+  color: var(--muted);
+
+  font-size: .8rem;
+}
+
+
+/* =========================================================
+   RESEARCH TIP
+   ========================================================= */
+
+.research-tip {
+  display: grid;
+
+  grid-template-columns:
+    auto
+    1fr;
+
+  gap: 25px;
+
+  align-items: center;
+
+  margin-top: 70px;
+
+  padding:
+    30px;
+
+  background:
+    rgba(255,209,102,.07);
+
+  border:
+    1px solid
+    rgba(255,209,102,.3);
+
+  border-radius: 14px;
+}
+
+.tip-number {
+  display: flex;
+
+  align-items: center;
+  justify-content: center;
+
+  width: 70px;
+  height: 70px;
+
+  color: #07131e;
+  background: var(--amber);
+
+  border-radius: 50%;
+
+  font-size: 1.1rem;
+  font-weight: 900;
+}
+
+.tip-content span {
+  color: var(--amber);
+
+  font-size: .65rem;
+  font-weight: 900;
+
+  letter-spacing: 1.7px;
+}
+
+.tip-content h2 {
+  margin:
+    3px
+    0
+    5px;
+
+  font-size: 1.4rem;
+}
+
+.tip-content p {
+  margin: 0;
+
+  color: var(--muted);
+}
+
+
+/* =========================================================
+   RETURN BUTTON
+   ========================================================= */
+
+.return-area {
+  margin-top: 65px;
+
+  text-align: center;
+}
+
+.return-button {
+  display: inline-block;
+
+  padding:
+    12px
+    18px;
+
+  color: #00131f;
+  background: var(--sky);
+
+  border-radius: 7px;
+
+  font-size: .72rem;
+  font-weight: 900;
+
+  letter-spacing: 1.3px;
+
+  text-decoration: none;
+
+  transition:
+    transform .2s ease,
+    box-shadow .2s ease;
+}
+
+.return-button:hover {
+  transform:
+    translateY(-3px);
+
+  box-shadow:
+    0 12px 25px
+    rgba(120,221,255,.2);
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+footer {
+  display: flex;
+
+  justify-content: space-between;
+
+  gap: 15px;
+
+  flex-wrap: wrap;
+
+  margin-top: 60px;
+
+  padding-top: 20px;
+
+  color: #7f9baa;
+
+  border-top:
+    1px solid
+    rgba(255,255,255,.1);
+
+  font-size: .65rem;
+  font-weight: 800;
+
+  letter-spacing: 1.2px;
+}
+
+
+/* =========================================================
+   READING MODE
+   ========================================================= */
+
+body.reading-mode {
+  font-size: 118%;
+
+  background: #071827;
+}
+
+body.reading-mode .sky,
+body.reading-mode .site::before {
+  display: none;
+}
+
+body.reading-mode p {
+  line-height: 1.9;
+}
+
+body.reading-mode .hero h1 {
+  letter-spacing: -2px;
+}
+
+
+/* =========================================================
+   PAUSED MOTION
+   ========================================================= */
+
+body.motion-paused *,
+body.motion-paused *::before,
+body.motion-paused *::after {
+  animation-play-state:
+    paused !important;
+
+  transition:
+    none !important;
+}
+
+
+/* =========================================================
+   ANIMATION
+   ========================================================= */
+
+@keyframes drift {
+
+  from {
+    left: -400px;
+  }
+
+  to {
+    left: calc(100% + 400px);
+  }
+
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 950px) {
+
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog {
+    max-width: 500px;
+
+    margin:
+      0
+      auto
+      20px;
+  }
+
+  .shelf {
+    grid-template-columns:
+      repeat(
+        2,
+        1fr
+      );
+  }
+
+  .dewey-grid {
+    grid-template-columns:
+      repeat(
+        2,
+        1fr
+      );
+  }
+
+}
+
+
+@media (max-width: 620px) {
+
+  .wrapper {
+    padding:
+      20px
+      18px
+      50px;
+  }
+
+  .hero {
+    min-height: auto;
+
+    padding:
+      65px
+      0;
+  }
+
+  .hero h1 {
+    font-size:
+      clamp(
+        3.4rem,
+        18vw,
+        5rem
+      );
+
+    letter-spacing: -3px;
+  }
+
+  .shelf,
+  .dewey-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .research-tip {
+    grid-template-columns: 1fr;
+  }
+
+  .controls {
+    width: 100%;
+  }
+
+  .control {
+    flex: 1;
+  }
+
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration:
+      .01ms !important;
+
+    animation-iteration-count:
+      1 !important;
+
+    transition-duration:
+      .01ms !important;
+  }
+
+}
+
+</style>
+</head>
+
+
+<body>
+
+<a
+  class="skip-link"
+  href="#main"
+>
+  Skip to main content
+</a>
+
+
+<div class="site">
+
+
+  <!-- Decorative atmosphere -->
+
+  <div
+    class="sky"
+    aria-hidden="true"
+  >
+
+    <div class="cloud cloud-one"></div>
+    <div class="cloud cloud-two"></div>
+    <div class="cloud cloud-three"></div>
+
+  </div>
+
+
+
+  <main
+    class="wrapper"
+    id="main"
+  >
+
+
+    <!-- =====================================================
+         NAVIGATION
+         ===================================================== -->
+
+    <nav
+      class="topbar"
+      aria-label="Weather Lab navigation"
+    >
+
+
+      <div class="breadcrumb">
+
+        <a href="index.html">
+          WKMS WEATHER LAB
+        </a>
+
+        <span aria-hidden="true">
+          /
+        </span>
+
+        <span>
+          STATION 01
+        </span>
+
+        <span aria-hidden="true">
+          /
+        </span>
+
+        <span>
+          WEATHER LIBRARY
+        </span>
+
+      </div>
+
+
+      <div class="controls">
+
+        <button
+          class="control"
+          id="readingMode"
+          type="button"
+          aria-pressed="false"
+        >
+          Aa &nbsp; Reading Mode
+        </button>
+
+        <button
+          class="control"
+          id="motionToggle"
+          type="button"
+          aria-pressed="false"
+        >
+          Pause Motion
+        </button>
+
+      </div>
+
+
+    </nav>
+
+
+
+    <!-- =====================================================
+         HERO
+         ===================================================== -->
+
+    <header class="hero">
+
+
+      <div>
+
+
+        <div class="station">
+
+          STATION 01 // ATMOSPHERIC ARCHIVES
+
+        </div>
+
+
+        <h1>
+
+          WEATHER<br>
+
+          <span>LIBRARY</span>
+
+        </h1>
+
+
+        <p class="hero-copy">
+
+          Every forecast starts somewhere.
+          Explore the shelves, build your background
+          knowledge, follow your questions, and find
+          evidence that helps explain what the
+          atmosphere is doing.
+
+        </p>
+
+
+      </div>
+
+
+
+      <!-- old-school library card -->
+
+      <aside
+        class="catalog"
+        aria-label="Weather Library catalog card"
+      >
+
+        <div class="catalog-label">
+
+          WKMS LIBRARY CATALOG
+
+        </div>
+
+        <h2>
+          ATMOSPHERIC<br>
+          ARCHIVES
+        </h2>
+
+        <p>
+          SUBJECT:
+          WEATHER / METEOROLOGY
+        </p>
+
+        <p>
+          COLLECTION:
+          EARTH &amp; SPACE SCIENCE
+        </p>
+
+        <p>
+          STATUS:
+          OPEN FOR INVESTIGATION
+        </p>
+
+        <div class="catalog-code">
+          STATION 01
+        </div>
+
+      </aside>
+
+
+    </header>
+
+
+
+    <!-- =====================================================
+         QUICK NAVIGATION
+         ===================================================== -->
+
+    <nav
+      class="quick-nav"
+      aria-label="Weather Library sections"
+    >
+
+      <a href="#nonfiction">
+        NONFICTION SHELF
+      </a>
+
+      <a href="#fiction">
+        FICTION SHELF
+      </a>
+
+      <a href="#dewey">
+        DEWEY FORECAST
+      </a>
+
+      <a href="#research-tip">
+        RESEARCH TIP
+      </a>
+
+    </nav>
+
+
+
+    <!-- =====================================================
+         NONFICTION
+         ===================================================== -->
+
+    <section
+      id="nonfiction"
+      aria-labelledby="nonfiction-title"
+    >
+
+
+      <div class="section-header">
+
+        <div class="section-code">
+          SHELF A // INFORMATIONAL TEXT
+        </div>
+
+        <h2 id="nonfiction-title">
+          Nonfiction Forecast Shelf
+        </h2>
+
+        <p>
+          Start here when you need background
+          information, scientific explanations,
+          diagrams, storm facts, or evidence for
+          your meteorological investigation.
+        </p>
+
+      </div>
+
+
+
+      <div class="shelf">
+
+
+        <!--
+        ======================================================
+        PLACEHOLDERS
+
+        We will replace these with the actual books
+        selected for the pathfinder.
+        ======================================================
+        -->
+
+
+        <article class="book placeholder">
+
+          <div
+            class="book-number"
+            aria-hidden="true"
+          >
+            01
+          </div>
+
+          <div class="call-number">
+            CALL NO. — TBD
+          </div>
+
+          <div class="resource-type">
+            NONFICTION // WEATHER SCIENCE
+          </div>
+
+          <h3>
+            Atmospheric Science Resource
+          </h3>
+
+          <div class="author">
+            Resource selection in progress
+          </div>
+
+          <p class="annotation">
+            This shelf space is reserved for a
+            librarian-selected informational text
+            that supports student investigation of
+            weather and atmospheric processes.
+          </p>
+
+          <div class="best-for">
+            <strong>BEST FOR //</strong><br>
+            Building background knowledge
+          </div>
+
+        </article>
+
+
+
+        <article class="book placeholder">
+
+          <div
+            class="book-number"
+            aria-hidden="true"
+          >
+            02
+          </div>
+
+          <div class="call-number">
+            CALL NO. — TBD
+          </div>
+
+          <div class="resource-type">
+            NONFICTION // SEVERE WEATHER
+          </div>
+
+          <h3>
+            Severe Weather Resource
+          </h3>
+
+          <div class="author">
+            Resource selection in progress
+          </div>
+
+          <p class="annotation">
+            This shelf space is reserved for a
+            nonfiction resource addressing severe
+            weather, natural hazards, forecasting,
+            or weather safety.
+          </p>
+
+          <div class="best-for">
+            <strong>BEST FOR //</strong><br>
+            Investigating hazards and patterns
+          </div>
+
+        </article>
+
+
+
+        <article class="book placeholder">
+
+          <div
+            class="book-number"
+            aria-hidden="true"
+          >
+            03
+          </div>
+
+          <div class="call-number">
+            CALL NO. — TBD
+          </div>
+
+          <div class="resource-type">
+            NONFICTION // METEOROLOGY
+          </div>
+
+          <h3>
+            Meteorology Resource
+          </h3>
+
+          <div class="author">
+            Resource selection in progress
+          </div>
+
+          <p class="annotation">
+            This shelf space is reserved for a
+            resource that helps students understand
+            how meteorologists observe, analyze, and
+            predict weather.
+          </p>
+
+          <div class="best-for">
+            <strong>BEST FOR //</strong><br>
+            Thinking like a meteorologist
+          </div>
+
+        </article>
+
+
+      </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         FICTION
+         ===================================================== -->
+
+    <section
+      id="fiction"
+      aria-labelledby="fiction-title"
+    >
+
+
+      <div class="section-header">
+
+        <div class="section-code">
+          SHELF B // STORIES &amp; WEATHER
+        </div>
+
+        <h2 id="fiction-title">
+          Fiction Under the Forecast
+        </h2>
+
+        <p>
+          Weather changes stories, too. These
+          selections connect atmospheric events
+          with characters, decisions, survival,
+          communities, and human experiences.
+        </p>
+
+      </div>
+
+
+
+      <div class="shelf">
+
+
+        <article class="book placeholder">
+
+          <div
+            class="book-number"
+            aria-hidden="true"
+          >
+            01
+          </div>
+
+          <div class="call-number">
+            FICTION — TBD
+          </div>
+
+          <div class="resource-type">
+            FICTION // WEATHER CONNECTION
+          </div>
+
+          <h3>
+            Weather Fiction Selection
+          </h3>
+
+          <div class="author">
+            Resource selection in progress
+          </div>
+
+          <p class="annotation">
+            This space is reserved for an
+            age-appropriate story in which weather
+            or a natural hazard plays an important
+            role.
+          </p>
+
+          <div class="best-for">
+            <strong>BEST FOR //</strong><br>
+            Exploring weather through story
+          </div>
+
+        </article>
+
+
+
+        <article class="book placeholder">
+
+          <div
+            class="book-number"
+            aria-hidden="true"
+          >
+            02
+          </div>
+
+          <div class="call-number">
+            FICTION — TBD
+          </div>
+
+          <div class="resource-type">
+            FICTION // WEATHER CONNECTION
+          </div>
+
+          <h3>
+            Storm Story Selection
+          </h3>
+
+          <div class="author">
+            Resource selection in progress
+          </div>
+
+          <p class="annotation">
+            This space is reserved for another
+            fiction selection connecting readers
+            with storms, weather events, or their
+            effects on people and communities.
+          </p>
+
+          <div class="best-for">
+            <strong>BEST FOR //</strong><br>
+            Making real-world connections
+          </div>
+
+        </article>
+
+
+
+        <article class="book placeholder">
+
+          <div
+            class="book-number"
+            aria-hidden="true"
+          >
+            03
+          </div>
+
+          <div class="call-number">
+            FICTION — TBD
+          </div>
+
+          <div class="resource-type">
+            FICTION // WEATHER CONNECTION
+          </div>
+
+          <h3>
+            Atmospheric Story Selection
+          </h3>
+
+          <div class="author">
+            Resource selection in progress
+          </div>
+
+          <p class="annotation">
+            This space is reserved for a final
+            literary connection to the atmospheric
+            science students are investigating.
+          </p>
+
+          <div class="best-for">
+            <strong>BEST FOR //</strong><br>
+            Extending the investigation
+          </div>
+
+        </article>
+
+
+      </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         DEWEY FORECAST
+         ===================================================== -->
+
+    <section
+      id="dewey"
+      aria-labelledby="dewey-title"
+    >
+
+
+      <div class="section-header">
+
+        <div class="section-code">
+          COLLECTION MAP // DEWEY DECIMAL SYSTEM
+        </div>
+
+        <h2 id="dewey-title">
+          The Dewey Forecast
+        </h2>
+
+        <p>
+          Weather research can live in more than
+          one part of a library. Follow the subject,
+          not just one shelf.
+        </p>
+
+      </div>
+
+
+
+      <div class="dewey-panel">
+
+
+        <div class="dewey-grid">
+
+
+          <article class="dewey">
+
+            <div class="dewey-code">
+              500s
+            </div>
+
+            <h3>
+              Natural Sciences
+            </h3>
+
+            <p>
+              Begin here for broad science,
+              Earth systems, and related scientific
+              background.
+            </p>
+
+          </article>
+
+
+
+          <article class="dewey">
+
+            <div class="dewey-code">
+              550s
+            </div>
+
+            <h3>
+              Earth Sciences
+            </h3>
+
+            <p>
+              Explore Earth systems, atmospheric
+              processes, geology, and related
+              environmental science.
+            </p>
+
+          </article>
+
+
+
+          <article class="dewey">
+
+            <div class="dewey-code">
+              551
+            </div>
+
+            <h3>
+              Meteorology
+            </h3>
+
+            <p>
+              A major destination for weather,
+              climate, storms, atmospheric
+              processes, and meteorology.
+            </p>
+
+          </article>
+
+
+        </div>
+
+
+      </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         RESEARCH TIP
+         ===================================================== -->
+
+    <aside
+      class="research-tip"
+      id="research-tip"
+    >
+
+
+      <div
+        class="tip-number"
+        aria-hidden="true"
+      >
+        01
+      </div>
+
+
+      <div class="tip-content">
+
+        <span>
+          LIBRARIAN FIELD NOTE
+        </span>
+
+        <h2>
+          Don't stop at the first shelf.
+        </h2>
+
+        <p>
+          Your research question may lead you to
+          several parts of the collection. Search
+          by topic, follow related terms, and ask
+          what kind of evidence you still need
+          before deciding your forecast.
+        </p>
+
+      </div>
+
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         RETURN
+         ===================================================== -->
+
+    <div class="return-area">
+
+      <a
+        class="return-button"
+        href="index.html"
+      >
+        ← RETURN TO WEATHER LAB
+      </a>
+
+    </div>
+
+
+
+    <footer>
+
+      <span>
+        WKMS WEATHER LAB
+      </span>
+
+      <span>
+        STATION 01 // ATMOSPHERIC ARCHIVES
+      </span>
+
+      <span>
+        WEATHER LIBRARY
+      </span>
+
+    </footer>
+
+
+  </main>
+
+</div>
+
+
+
+<script>
+
+/* =========================================================
+   READING MODE
+   ========================================================= */
+
+const readingButton =
+  document.getElementById("readingMode");
+
+readingButton.addEventListener(
+  "click",
+  function () {
+
+    const active =
+      document.body.classList.toggle(
+        "reading-mode"
+      );
+
+    readingButton.setAttribute(
+      "aria-pressed",
+      active
+    );
+
+    readingButton.innerHTML =
+      active
+        ? "Aa &nbsp; Standard View"
+        : "Aa &nbsp; Reading Mode";
+
+    localStorage.setItem(
+      "wkmsReadingMode",
+      active
+    );
+
+  }
+);
+
+
+if (
+  localStorage.getItem(
+    "wkmsReadingMode"
+  ) === "true"
+) {
+
+  document.body.classList.add(
+    "reading-mode"
+  );
+
+  readingButton.setAttribute(
+    "aria-pressed",
+    "true"
+  );
+
+  readingButton.innerHTML =
+    "Aa &nbsp; Standard View";
+
+}
+
+
+/* =========================================================
+   MOTION
+   ========================================================= */
+
+const motionButton =
+  document.getElementById(
+    "motionToggle"
+  );
+
+motionButton.addEventListener(
+  "click",
+  function () {
+
+    const paused =
+      document.body.classList.toggle(
+        "motion-paused"
+      );
+
+    motionButton.setAttribute(
+      "aria-pressed",
+      paused
+    );
+
+    motionButton.textContent =
+      paused
+        ? "Resume Motion"
+        : "Pause Motion";
+
+    localStorage.setItem(
+      "wkmsMotionPaused",
+      paused
+    );
+
+  }
+);
+
+
+if (
+  localStorage.getItem(
+    "wkmsMotionPaused"
+  ) === "true"
+) {
+
+  document.body.classList.add(
+    "motion-paused"
+  );
+
+  motionButton.setAttribute(
+    "aria-pressed",
+    "true"
+  );
+
+  motionButton.textContent =
+    "Resume Motion";
+
+}
+
+</script>
+
+</body>
+</html>
