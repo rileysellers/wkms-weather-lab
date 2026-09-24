@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="WKMS Weather Lab Data Center: interactive meteorological maps, observations, and evidence analysis for sixth-grade weather inquiry.">
+<title>Data Center | WKMS Weather Lab</title>
+<style>
+:root{--night:#020914;--deep:#041522;--panel:#071d2d;--cyan:#67e8ff;--blue:#75bfff;--green:#62efb2;--amber:#ffd166;--red:#ff6f6f;--white:#f7fbff;--soft:#d1e2ec;--muted:#92adbc;--line:rgba(103,232,255,.23)}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;min-height:100vh;overflow-x:hidden;color:var(--white);font-family:Arial,Helvetica,sans-serif;line-height:1.6;background:linear-gradient(180deg,#03131f,#020914 58%,#01060b)}
+a{color:inherit}button{font:inherit}a:focus-visible,button:focus-visible{outline:4px solid var(--amber);outline-offset:4px}.skip{position:fixed;top:-100px;left:20px;z-index:9999;padding:12px 18px;background:var(--amber);color:#00131f;font-weight:900;border-radius:0 0 8px 8px}.skip:focus{top:0}
+.bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;background:radial-gradient(circle at 72% 25%,#0c4c5b44,transparent 26%),radial-gradient(circle at 25% 70%,#1a325244,transparent 30%)}.grid{position:absolute;inset:0;opacity:.09;background-image:linear-gradient(#67e8ff33 1px,transparent 1px),linear-gradient(90deg,#67e8ff33 1px,transparent 1px);background-size:48px 48px}.radar-bg{position:absolute;width:900px;height:900px;right:-260px;top:-250px;border:1px solid #67e8ff20;border-radius:50%;background:repeating-radial-gradient(circle,transparent 0 12%,#67e8ff13 12.2% 12.5%),conic-gradient(#62efb217,transparent 45deg);animation:spin 15s linear infinite}.radar-bg:before,.radar-bg:after{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:#67e8ff18}.radar-bg:after{left:0;right:0;top:50%;width:auto;height:1px}.scanline{position:absolute;left:0;right:0;height:120px;top:-130px;background:linear-gradient(transparent,#67e8ff0b,transparent);animation:scan 8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}@keyframes scan{to{top:110%}}@keyframes pulse{50%{opacity:.45}}@keyframes sweep{to{transform:translate(-50%,-50%) rotate(360deg)}}@keyframes moveFront{to{transform:translateX(50px)}}
+.wrap{position:relative;z-index:2;width:min(1420px,100%);margin:auto;padding:24px clamp(18px,4vw,70px) 70px}.topbar{display:flex;justify-content:space-between;align-items:center;gap:18px;flex-wrap:wrap;padding:14px 0;border-bottom:1px solid #ffffff22}.crumb{font-size:.7rem;font-weight:900;letter-spacing:1.6px;color:var(--cyan)}.crumb a{text-decoration:none}.controls{display:flex;gap:8px}.control{min-height:42px;padding:8px 13px;border:1px solid var(--line);border-radius:8px;background:#ffffff0c;color:var(--white);font-weight:800;cursor:pointer}
+.hero{display:grid;grid-template-columns:1fr 1fr;gap:42px;align-items:center;min-height:590px;padding:58px 0}.eyebrow{font-size:.72rem;font-weight:900;letter-spacing:3px;color:var(--cyan)}.hero h1{margin:10px 0 20px;font-size:clamp(4rem,9vw,8rem);line-height:.82;letter-spacing:-5px;text-transform:uppercase}.hero h1 span{color:var(--cyan)}.hero p{max-width:690px;color:var(--soft);font-size:1.15rem}.tag{display:inline-flex;margin-top:15px;padding:7px 11px;border:1px solid #62efb255;border-radius:999px;color:var(--green);font:800 .68rem "Courier New",monospace;letter-spacing:1px;background:#62efb20b}
+.command{padding:18px;border:1px solid #67e8ff44;border-radius:18px;background:#04121eee;box-shadow:0 30px 70px #0008}.command-top{display:flex;justify-content:space-between;gap:10px;color:var(--green);font:800 .66rem "Courier New",monospace;letter-spacing:1px}.map-screen{position:relative;min-height:370px;margin-top:14px;overflow:hidden;border:1px solid #67e8ff44;border-radius:8px;background:radial-gradient(circle at 50% 50%,#0b3340,#04131d 68%)}.map-screen:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#67e8ff18 1px,transparent 1px),linear-gradient(90deg,#67e8ff18 1px,transparent 1px);background-size:35px 35px}.state{position:absolute;left:50%;top:50%;width:210px;height:170px;transform:translate(-50%,-50%) rotate(-5deg);clip-path:polygon(7% 10%,72% 4%,98% 43%,78% 92%,42% 100%,18% 72%,0 42%);background:#67e8ff12;border:2px solid var(--cyan);filter:drop-shadow(0 0 12px #67e8ff55)}.radar-sweep{position:absolute;left:50%;top:50%;width:430px;height:430px;transform:translate(-50%,-50%);border-radius:50%;background:conic-gradient(#62efb244,transparent 50deg);animation:sweep 4s linear infinite}.blob{position:absolute;border-radius:50%;filter:blur(4px);opacity:.75}.b1{width:75px;height:50px;left:52%;top:36%;background:#62efb2}.b2{width:48px;height:70px;left:42%;top:48%;background:#ffd166}.b3{width:36px;height:42px;left:60%;top:55%;background:#ff6f6f}.readout{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:10px;color:var(--muted);font:700 .65rem "Courier New",monospace}
+.nav{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:60px}.nav a{padding:9px 13px;border:1px solid var(--line);border-radius:999px;text-decoration:none;color:var(--cyan);font-size:.68rem;font-weight:900;letter-spacing:1px;background:#67e8ff0a}
+.section-head{margin:70px 0 26px}.section-code{color:var(--cyan);font-size:.67rem;font-weight:900;letter-spacing:2px}.section-head h2{font-size:clamp(2rem,4vw,3.4rem);margin:4px 0 8px}.section-head p{max-width:850px;margin:0;color:var(--muted)}
+.data-wall{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}.feed{position:relative;min-height:290px;padding:20px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(145deg,#09273aee,#03111cee);overflow:hidden}.feed:after{content:"";position:absolute;left:0;right:0;top:-60px;height:55px;background:linear-gradient(transparent,#67e8ff0d,transparent);animation:scan 5s linear infinite}.feed-id{color:var(--green);font:900 .64rem "Courier New",monospace;letter-spacing:1px}.feed h3{margin:16px 0 7px}.feed p{color:var(--muted);font-size:.84rem}.feed .best{display:block;margin-top:16px;padding-top:12px;border-top:1px solid #ffffff17;color:var(--amber);font-size:.7rem;font-weight:900}.open-feed{position:relative;z-index:2;width:100%;margin-top:14px;padding:9px;border:1px solid var(--cyan);border-radius:5px;background:transparent;color:var(--cyan);font-weight:900;cursor:pointer}.open-feed:hover{background:var(--cyan);color:#00131f}
+.analysis-lab{display:grid;grid-template-columns:1.1fr .9fr;gap:20px;padding:27px;border:1px solid #62efb244;border-radius:18px;background:#041522ee}.weather-map{position:relative;min-height:420px;overflow:hidden;border:1px solid #67e8ff44;border-radius:10px;background:linear-gradient(145deg,#0b3447,#061725)}.weather-map:before{content:"";position:absolute;inset:0;background-image:linear-gradient(#67e8ff18 1px,transparent 1px),linear-gradient(90deg,#67e8ff18 1px,transparent 1px);background-size:40px 40px}.front{position:absolute;left:9%;right:8%;top:48%;height:5px;background:var(--blue);transform:rotate(-13deg);transition:.5s}.front:after{content:"▲  ▲  ▲  ▲  ▲  ▲";position:absolute;left:10px;top:-18px;color:var(--blue);font-size:22px;letter-spacing:12px}.pressure{position:absolute;display:grid;place-items:center;width:64px;height:64px;border:2px solid;border-radius:50%;font-size:2rem;font-weight:900}.high{left:18%;top:20%;color:var(--blue)}.low{right:20%;bottom:18%;color:var(--red)}.airmass{position:absolute;padding:7px 10px;border:1px solid #ffffff33;border-radius:6px;background:#020a11aa;font:800 .65rem "Courier New",monospace}.am1{left:12%;bottom:18%}.am2{right:12%;top:18%}.analysis-controls{display:flex;flex-direction:column;gap:10px}.analysis-controls button{padding:13px;text-align:left;border:1px solid #67e8ff33;border-radius:8px;background:#ffffff08;color:var(--white);font-weight:800;cursor:pointer}.analysis-controls button.active{border-color:var(--green);background:#62efb214;color:var(--green)}.evidence-box{margin-top:8px;padding:18px;border-left:4px solid var(--amber);background:#01090f;color:var(--soft)}.evidence-box strong{display:block;color:var(--amber);font:900 .7rem "Courier New",monospace;margin-bottom:7px}
+.challenge{padding:28px;border:1px solid #ffd16655;border-radius:18px;background:#ffd1660a}.challenge-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}.choice{padding:18px;border:1px solid #ffffff1c;border-radius:9px;background:#ffffff08;color:#fff;text-align:left;cursor:pointer}.choice:hover{border-color:var(--cyan)}.choice.correct{border-color:var(--green);background:#62efb214}.choice.wrong{border-color:var(--red);background:#ff6f6f10}.feedback{min-height:56px;margin-top:16px;padding:14px;border-radius:7px;background:#01090f;color:var(--soft)}
+.rule{display:grid;grid-template-columns:auto 1fr;gap:22px;align-items:center;margin-top:65px;padding:27px;border:1px solid #ffd16655;border-radius:14px;background:#ffd1660d}.rule-num{display:grid;place-items:center;width:68px;height:68px;border-radius:50%;background:var(--amber);color:#07131e;font-weight:900}.rule small{color:var(--amber);font-weight:900;letter-spacing:1.4px}.rule h2{margin:3px 0}.rule p{margin:0;color:var(--muted)}
+.return{text-align:center;margin-top:60px}.return a{display:inline-block;padding:12px 18px;border-radius:7px;background:var(--cyan);color:#00131f;text-decoration:none;font-weight:900;font-size:.72rem;letter-spacing:1px}footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:55px;padding-top:20px;border-top:1px solid #ffffff18;color:#7895a6;font-size:.65rem;font-weight:800;letter-spacing:1px}
+body.reading{font-size:118%;background:#071827}body.reading .bg{display:none}body.paused *,body.paused *:before,body.paused *:after{animation-play-state:paused!important;transition:none!important}
+@media(max-width:1050px){.hero,.analysis-lab{grid-template-columns:1fr}.data-wall{grid-template-columns:1fr 1fr}.challenge-grid{grid-template-columns:1fr}.command{max-width:700px}}@media(max-width:650px){.wrap{padding:18px 16px 50px}.hero{min-height:auto;padding:60px 0}.hero h1{font-size:clamp(3.5rem,18vw,5.2rem);letter-spacing:-3px}.data-wall{grid-template-columns:1fr}.controls{width:100%}.control{flex:1}.rule{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*:before,*:after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">Skip to main content</a>
+<div class="bg" aria-hidden="true"><div class="grid"></div><div class="radar-bg"></div><div class="scanline"></div></div>
+<main class="wrap" id="main">
+<nav class="topbar" aria-label="Weather Lab navigation"><div class="crumb"><a href="index.html">WKMS WEATHER LAB</a> / STATION 04 / DATA CENTER</div><div class="controls"><button class="control" id="reading" type="button" aria-pressed="false">Aa Reading Mode</button><button class="control" id="motion" type="button" aria-pressed="false">Pause Motion</button></div></nav>
+
+<header class="hero">
+<div><div class="eyebrow">STATION 04 // ATMOSPHERIC SURVEILLANCE</div><h1>DATA<br><span>CENTER</span></h1><p>The atmosphere leaves clues. Enter the analysis room to examine weather maps, radar, observations, and patterns. Your job is to turn raw weather information into evidence you can explain.</p><span class="tag">MISSION // READ THE ATMOSPHERE</span></div>
+<aside class="command" aria-label="Animated weather data display"><div class="command-top"><span>WKMS RADAR ARRAY // SC SECTOR</span><span>DATA STREAM // ACTIVE</span></div><div class="map-screen"><div class="radar-sweep"></div><div class="state"></div><i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i></div><div class="readout"><span>RADAR // SIMULATION</span><span>MAP // TRAINING DISPLAY</span><span>FORECAST MODE // ANALYZE</span></div></aside>
+</header>
+
+<nav class="nav" aria-label="Data Center sections"><a href="#feeds">DATA FEEDS</a><a href="#lab">ANALYSIS LAB</a><a href="#challenge">PATTERN CHALLENGE</a><a href="#rule">DATA RULE</a></nav>
+
+<section id="feeds" aria-labelledby="feedsTitle">
+<div class="section-head"><div class="section-code">LIVE DESK // VERIFIED WEATHER SOURCES</div><h2 id="feedsTitle">Choose a Data Feed</h2><p>This station will connect students to trusted weather websites and data tools. The final links and annotations will be added after each resource is verified. The displays below are interface placeholders, not live weather observations.</p></div>
+<div class="data-wall">
+<article class="feed"><div class="feed-id">FEED 01 // RADAR</div><h3>Radar & Precipitation</h3><p>Reserved for a verified source students can use to observe precipitation location, movement, and intensity.</p><span class="best">BEST FOR // WHERE IS THE WEATHER?</span><button class="open-feed" type="button" data-msg="Radar can help you observe where precipitation is occurring and how it is moving. Final verified resource link will be added here.">INSPECT FEED</button></article>
+<article class="feed"><div class="feed-id">FEED 02 // SURFACE MAP</div><h3>Fronts & Pressure</h3><p>Reserved for a verified surface-analysis map showing fronts, pressure systems, and other atmospheric features.</p><span class="best">BEST FOR // WHAT SYSTEMS ARE INTERACTING?</span><button class="open-feed" type="button" data-msg="Surface maps can help you locate fronts and pressure systems and connect them to changing weather. Final verified resource link will be added here.">INSPECT FEED</button></article>
+<article class="feed"><div class="feed-id">FEED 03 // OBSERVATIONS</div><h3>Weather Observations</h3><p>Reserved for current or archived observations such as temperature, pressure, wind, humidity, and precipitation.</p><span class="best">BEST FOR // WHAT CONDITIONS ARE BEING MEASURED?</span><button class="open-feed" type="button" data-msg="Observations provide measured conditions that can become evidence in your forecast. Final verified resource link will be added here.">INSPECT FEED</button></article>
+<article class="feed"><div class="feed-id">FEED 04 // HAZARDS</div><h3>Hazard Data</h3><p>Reserved for a trusted source showing severe-weather hazards, watches, warnings, or historical hazard information.</p><span class="best">BEST FOR // WHAT HAZARD PATTERNS MATTER?</span><button class="open-feed" type="button" data-msg="Hazard information can help you investigate patterns and connect forecast evidence to community safety. Final verified resource link will be added here.">INSPECT FEED</button></article>
+</div>
+<div class="feedback" id="feedFeedback" aria-live="polite">SELECT A DATA FEED TO OPEN ITS ANALYSIS NOTE.</div>
+</section>
+
+<section id="lab" aria-labelledby="labTitle">
+<div class="section-head"><div class="section-code">ANALYSIS BAY // TRAINING SIMULATION</div><h2 id="labTitle">Build the Weather Picture</h2><p>Practice isolating different pieces of a weather map. The display is a learning simulation—not a real forecast. Toggle the evidence layers and think about what each one contributes to your interpretation.</p></div>
+<div class="analysis-lab">
+<div class="weather-map" aria-label="Simulated weather map"><div class="front" id="front"></div><div class="pressure high" id="high">H</div><div class="pressure low" id="low">L</div><div class="airmass am1" id="am1">WARM / MOIST</div><div class="airmass am2" id="am2">COOL / DRY</div></div>
+<div class="analysis-controls">
+<button type="button" class="active" data-layer="front">FRONTAL BOUNDARY // ON</button>
+<button type="button" class="active" data-layer="pressure">PRESSURE SYSTEMS // ON</button>
+<button type="button" class="active" data-layer="airmass">AIR MASSES // ON</button>
+<div class="evidence-box"><strong>ANALYSIS PROMPT</strong><span id="analysisPrompt">What patterns do you notice when the air masses, pressure systems, and frontal boundary are viewed together?</span></div>
+</div>
+</div>
+</section>
+
+<section id="challenge" aria-labelledby="challengeTitle">
+<div class="section-head"><div class="section-code">PATTERN RECOGNITION // QUICK CHECK</div><h2 id="challengeTitle">Which Evidence Would You Check?</h2><p>You notice that weather conditions are changing as a frontal boundary approaches. Which data source would most directly help you examine the location of the front and nearby pressure systems?</p></div>
+<div class="challenge"><div class="challenge-grid">
+<button class="choice" type="button" data-correct="false">A precipitation radar image only</button>
+<button class="choice" type="button" data-correct="true">A surface analysis map showing fronts and pressure systems</button>
+<button class="choice" type="button" data-correct="false">A general article explaining the water cycle</button>
+</div><div class="feedback" id="challengeFeedback" aria-live="polite">SELECT THE EVIDENCE SOURCE THAT BEST MATCHES THE QUESTION.</div></div>
+</section>
+
+<aside class="rule" id="rule"><div class="rule-num">04</div><div><small>METEOROLOGIST'S DATA RULE</small><h2>A map shows information. A meteorologist explains what the information means.</h2><p>Look for patterns, connect multiple pieces of evidence, and document how the data supports—or changes—your forecast in your Meteorologist's Inquiry Log.</p></div></aside>
+
+<div class="return"><a href="index.html">← RETURN TO WEATHER LAB</a></div>
+<footer><span>WKMS WEATHER LAB</span><span>STATION 04 // ATMOSPHERIC SURVEILLANCE</span><span>DATA CENTER</span></footer>
+</main>
+
+<script>
+document.querySelectorAll('.open-feed').forEach(btn=>btn.addEventListener('click',()=>{document.getElementById('feedFeedback').textContent=btn.dataset.msg;}));
+const layerMap={front:[document.getElementById('front')],pressure:[document.getElementById('high'),document.getElementById('low')],airmass:[document.getElementById('am1'),document.getElementById('am2')]};
+document.querySelectorAll('[data-layer]').forEach(btn=>btn.addEventListener('click',()=>{
+ const key=btn.dataset.layer,active=btn.classList.toggle('active');layerMap[key].forEach(el=>el.style.display=active?'':'none');btn.textContent=btn.textContent.replace(active?'OFF':'ON',active?'ON':'OFF');
+ const on=[...document.querySelectorAll('[data-layer].active')].length;
+ document.getElementById('analysisPrompt').textContent=on===3?'What patterns do you notice when the air masses, pressure systems, and frontal boundary are viewed together?':on===0?'Turn on a layer. What can that single type of evidence tell you—and what can it not tell you alone?':'How does adding or removing a layer change the weather story you can build from the map?';
+}));
+document.querySelectorAll('.choice').forEach(btn=>btn.addEventListener('click',()=>{
+ document.querySelectorAll('.choice').forEach(b=>b.classList.remove('correct','wrong'));
+ const good=btn.dataset.correct==='true';btn.classList.add(good?'correct':'wrong');
+ document.getElementById('challengeFeedback').textContent=good?'EVIDENCE MATCH // YES. A surface analysis map directly shows frontal boundaries and pressure systems, making it the strongest match for this question.':'TRY ANOTHER FEED // Ask what information the question specifically requires. Which source directly shows both fronts and pressure systems?';
+}));
+const reading=document.getElementById('reading'),motion=document.getElementById('motion');
+reading.addEventListener('click',()=>{const on=document.body.classList.toggle('reading');reading.setAttribute('aria-pressed',String(on));reading.textContent=on?'Aa Standard View':'Aa Reading Mode'});
+motion.addEventListener('click',()=>{const on=document.body.classList.toggle('paused');motion.setAttribute('aria-pressed',String(on));motion.textContent=on?'Resume Motion':'Pause Motion'});
+</script>
+</body>
+</html>
