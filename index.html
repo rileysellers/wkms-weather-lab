@@ -1,0 +1,2282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta
+    name="description"
+    content="WKMS Weather Lab student research pathfinder for sixth grade Earth and Space Science."
+  >
+
+  <title>WKMS Weather Lab | The Atmospheric Engine</title>
+
+  <style>
+
+    /* =========================================================
+       WKMS WEATHER LAB
+       THE ATMOSPHERIC ENGINE
+       ========================================================= */
+
+    :root {
+      --navy-1: #04101d;
+      --navy-2: #081b2d;
+      --navy-3: #0d2941;
+
+      --panel: #102f49;
+      --panel-light: #153b59;
+
+      --cyan: #70d7ff;
+      --cyan-bright: #b8efff;
+
+      --green: #58e0b4;
+
+      --yellow: #ffd166;
+      --orange: #ffb82e;
+
+      --white: #f7fbff;
+      --muted: #c6d5df;
+
+      --border: rgba(112, 215, 255, 0.28);
+    }
+
+
+    /* =========================================================
+       RESET
+       ========================================================= */
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+      padding: 0;
+      scroll-behavior: smooth;
+    }
+
+    body {
+      width: 100%;
+      min-height: 100vh;
+
+      margin: 0;
+      padding: 0;
+
+      overflow-x: hidden;
+
+      color: var(--white);
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      line-height: 1.6;
+
+      background:
+        radial-gradient(
+          circle at 82% 8%,
+          rgba(41, 171, 226, 0.18),
+          transparent 28%
+        ),
+
+        radial-gradient(
+          circle at 12% 72%,
+          rgba(88, 224, 180, 0.08),
+          transparent 25%
+        ),
+
+        linear-gradient(
+          145deg,
+          var(--navy-1),
+          var(--navy-2) 55%,
+          #061522
+        );
+    }
+
+    a {
+      color: inherit;
+    }
+
+    button,
+    a {
+      font: inherit;
+    }
+
+
+    /* =========================================================
+       SKIP LINK
+       ========================================================= */
+
+    .skip-link {
+      position: absolute;
+
+      top: -100px;
+      left: 20px;
+
+      z-index: 9999;
+
+      padding: 12px 18px;
+
+      color: #001018;
+      background: var(--yellow);
+
+      border-radius: 0 0 8px 8px;
+
+      font-weight: 800;
+      text-decoration: none;
+    }
+
+    .skip-link:focus {
+      top: 0;
+    }
+
+
+    /* =========================================================
+       KEYBOARD FOCUS
+       ========================================================= */
+
+    a:focus-visible,
+    button:focus-visible {
+      outline: 4px solid var(--yellow);
+      outline-offset: 5px;
+    }
+
+
+    /* =========================================================
+       FULL-PAGE SHELL
+       ========================================================= */
+
+    .weather-shell {
+      position: relative;
+
+      width: 100%;
+      min-height: 100vh;
+
+      overflow: hidden;
+    }
+
+
+    /* Atmospheric grid */
+
+    .weather-shell::before {
+      content: "";
+
+      position: absolute;
+      inset: 0;
+
+      z-index: 0;
+
+      pointer-events: none;
+
+      opacity: 0.14;
+
+      background-image:
+        linear-gradient(
+          rgba(112, 215, 255, 0.12) 1px,
+          transparent 1px
+        ),
+
+        linear-gradient(
+          90deg,
+          rgba(112, 215, 255, 0.12) 1px,
+          transparent 1px
+        );
+
+      background-size: 46px 46px;
+
+      mask-image:
+        linear-gradient(
+          to bottom,
+          black,
+          transparent 90%
+        );
+    }
+
+
+    /* =========================================================
+       MAIN CONTENT
+       ========================================================= */
+
+    .weather-lab {
+      position: relative;
+      z-index: 2;
+
+      width: 100%;
+      max-width: none;
+
+      margin: 0;
+
+      padding:
+        28px
+        clamp(22px, 5vw, 85px)
+        70px;
+    }
+
+
+    /* =========================================================
+       TOP STATUS BAR
+       ========================================================= */
+
+    .utility-row {
+      display: flex;
+
+      justify-content: space-between;
+      align-items: center;
+
+      gap: 20px;
+
+      flex-wrap: wrap;
+
+      padding-bottom: 16px;
+
+      border-bottom:
+        1px solid
+        rgba(255, 255, 255, 0.17);
+    }
+
+
+    .status {
+      color: var(--cyan);
+
+      font-size: 0.75rem;
+      font-weight: 800;
+
+      letter-spacing: 2px;
+
+      text-transform: uppercase;
+    }
+
+
+    .status-dot {
+      display: inline-block;
+
+      width: 9px;
+      height: 9px;
+
+      margin-left: 7px;
+
+      border-radius: 50%;
+
+      background: var(--green);
+
+      box-shadow:
+        0 0 10px
+        var(--green);
+
+      animation:
+        statusPulse
+        2.4s
+        ease-in-out
+        infinite;
+    }
+
+
+    /* =========================================================
+       ACCESSIBILITY CONTROLS
+       ========================================================= */
+
+    .controls {
+      display: flex;
+
+      gap: 8px;
+
+      flex-wrap: wrap;
+    }
+
+
+    .control-button {
+      min-height: 44px;
+
+      padding: 9px 14px;
+
+      color: var(--white);
+
+      background:
+        rgba(255, 255, 255, 0.06);
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: 8px;
+
+      cursor: pointer;
+
+      font-weight: 700;
+
+      transition:
+        background 0.2s ease,
+        border-color 0.2s ease,
+        transform 0.2s ease;
+    }
+
+
+    .control-button:hover {
+      background:
+        rgba(112, 215, 255, 0.14);
+
+      border-color: var(--cyan);
+
+      transform:
+        translateY(-2px);
+    }
+
+
+    /* =========================================================
+       HERO
+       ========================================================= */
+
+    .hero {
+      min-height: 470px;
+
+      display: flex;
+      flex-direction: column;
+
+      justify-content: center;
+
+      padding:
+        70px
+        0
+        50px;
+    }
+
+
+    .eyebrow {
+      color: var(--cyan);
+
+      font-size:
+        clamp(
+          0.75rem,
+          1.4vw,
+          0.9rem
+        );
+
+      font-weight: 900;
+
+      letter-spacing: 3px;
+
+      text-transform: uppercase;
+    }
+
+
+    .hero h1 {
+      max-width: 1100px;
+
+      margin:
+        10px
+        0
+        14px;
+
+      font-size:
+        clamp(
+          3.7rem,
+          9vw,
+          8.3rem
+        );
+
+      line-height: 0.88;
+
+      letter-spacing: -5px;
+
+      text-transform: uppercase;
+    }
+
+
+    .hero-subtitle {
+      color: var(--muted);
+
+      font-size:
+        clamp(
+          1.1rem,
+          2.3vw,
+          1.7rem
+        );
+
+      letter-spacing: 0.6px;
+    }
+
+
+    /* =========================================================
+       WEATHER ALERT
+       ========================================================= */
+
+    .alert {
+      position: relative;
+
+      overflow: hidden;
+
+      display: grid;
+
+      grid-template-columns:
+        auto
+        1fr;
+
+      align-items: center;
+
+      gap: 20px;
+
+      margin:
+        10px
+        0
+        65px;
+
+      padding:
+        24px
+        28px;
+
+      background:
+        rgba(
+          255,
+          184,
+          46,
+          0.08
+        );
+
+      border:
+        1px solid
+        rgba(
+          255,
+          184,
+          46,
+          0.55
+        );
+
+      border-left:
+        6px solid
+        var(--orange);
+
+      border-radius: 12px;
+    }
+
+
+    .alert::after {
+      content: "";
+
+      position: absolute;
+      inset: 0;
+
+      pointer-events: none;
+
+      transform:
+        translateX(-120%);
+
+      background:
+        linear-gradient(
+          90deg,
+          transparent,
+          rgba(
+            255,
+            255,
+            255,
+            0.07
+          ),
+          transparent
+        );
+
+      animation:
+        alertSweep
+        8s
+        linear
+        infinite;
+    }
+
+
+    .alert-icon {
+      font-size: 2.2rem;
+    }
+
+
+    .alert strong {
+      display: block;
+
+      margin-bottom: 4px;
+
+      color: #ffd06d;
+
+      font-size: 0.77rem;
+      font-weight: 900;
+
+      letter-spacing: 2px;
+    }
+
+
+    .alert p {
+      max-width: 950px;
+
+      margin: 0;
+    }
+
+
+    /* =========================================================
+       SECTION HEADINGS
+       ========================================================= */
+
+    .section-heading {
+      margin:
+        65px
+        0
+        24px;
+    }
+
+
+    .section-code {
+      color: var(--cyan);
+
+      font-size: 0.72rem;
+      font-weight: 900;
+
+      letter-spacing: 2.2px;
+
+      text-transform: uppercase;
+    }
+
+
+    .section-heading h2 {
+      margin:
+        5px
+        0;
+
+      font-size:
+        clamp(
+          2rem,
+          4vw,
+          3.1rem
+        );
+
+      line-height: 1.15;
+    }
+
+
+    .section-heading p {
+      max-width: 800px;
+
+      margin:
+        8px
+        0
+        0;
+
+      color: var(--muted);
+    }
+
+
+    /* =========================================================
+       INVESTIGATION TRACK
+       ========================================================= */
+
+    .mission-track {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          5,
+          minmax(0, 1fr)
+        );
+
+      gap: 10px;
+    }
+
+
+    .mission {
+      position: relative;
+
+      min-height: 165px;
+
+      overflow: hidden;
+
+      padding:
+        22px
+        18px;
+
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          0.045
+        );
+
+      border:
+        1px solid
+        rgba(
+          255,
+          255,
+          255,
+          0.09
+        );
+
+      border-top:
+        4px solid
+        #278eb3;
+
+      border-radius: 8px;
+
+      transition:
+        transform 0.25s ease,
+        background 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease;
+    }
+
+
+    .mission::after {
+      content: "";
+
+      position: absolute;
+
+      left: 0;
+      bottom: 0;
+
+      width: 0;
+      height: 3px;
+
+      background:
+        var(--green);
+
+      transition:
+        width
+        0.35s
+        ease;
+    }
+
+
+    .mission:hover {
+      transform:
+        translateY(-7px);
+
+      background:
+        rgba(
+          112,
+          215,
+          255,
+          0.09
+        );
+
+      border-color:
+        rgba(
+          112,
+          215,
+          255,
+          0.45
+        );
+
+      border-top-color:
+        var(--cyan);
+
+      box-shadow:
+        0
+        14px
+        30px
+        rgba(
+          0,
+          0,
+          0,
+          0.27
+        );
+    }
+
+
+    .mission:hover::after {
+      width: 100%;
+    }
+
+
+    .mission-number {
+      color: var(--cyan);
+
+      font-size: 0.72rem;
+      font-weight: 900;
+
+      letter-spacing: 2px;
+    }
+
+
+    .mission h3 {
+      margin:
+        8px
+        0
+        5px;
+
+      font-size: 1.02rem;
+
+      letter-spacing: 1px;
+    }
+
+
+    .mission p {
+      margin: 0;
+
+      color: var(--muted);
+
+      font-size: 0.86rem;
+    }
+
+
+    /* =========================================================
+       RESOURCE FORMAT KEY
+       ========================================================= */
+
+    .format-key {
+      display: flex;
+
+      gap: 9px;
+
+      flex-wrap: wrap;
+
+      margin-top: 22px;
+    }
+
+
+    .format-tag {
+      padding:
+        7px
+        12px;
+
+      color: var(--muted);
+
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          0.055
+        );
+
+      border:
+        1px solid
+        rgba(
+          255,
+          255,
+          255,
+          0.13
+        );
+
+      border-radius: 100px;
+
+      font-size: 0.78rem;
+      font-weight: 700;
+    }
+
+
+    /* =========================================================
+       RESEARCH STATION GRID
+       ========================================================= */
+
+    .station-grid {
+      display: grid;
+
+      grid-template-columns:
+        repeat(
+          3,
+          minmax(0, 1fr)
+        );
+
+      gap: 18px;
+    }
+
+
+    .station {
+      position: relative;
+
+      display: flex;
+      flex-direction: column;
+
+      min-height: 285px;
+
+      overflow: hidden;
+
+      padding: 28px;
+
+      color: var(--white);
+
+      text-decoration: none;
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(
+            18,
+            54,
+            82,
+            0.97
+          ),
+          rgba(
+            8,
+            25,
+            41,
+            0.99
+          )
+        );
+
+      border:
+        1px solid
+        var(--border);
+
+      border-radius: 15px;
+
+      transition:
+        transform 0.25s ease,
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        background 0.25s ease;
+    }
+
+
+    /* Radar circles */
+
+    .station::before {
+      content: "";
+
+      position: absolute;
+
+      width: 240px;
+      height: 240px;
+
+      right: -90px;
+      bottom: -95px;
+
+      border:
+        1px solid
+        rgba(
+          112,
+          215,
+          255,
+          0.18
+        );
+
+      border-radius: 50%;
+
+      box-shadow:
+        0 0 0 33px
+        rgba(
+          112,
+          215,
+          255,
+          0.035
+        ),
+
+        0 0 0 67px
+        rgba(
+          112,
+          215,
+          255,
+          0.022
+        );
+
+      transition:
+        transform
+        0.6s
+        ease;
+    }
+
+
+    /* Radar sweep */
+
+    .station::after {
+      content: "";
+
+      position: absolute;
+
+      width: 160px;
+      height: 160px;
+
+      right: -50px;
+      bottom: -55px;
+
+      opacity: 0;
+
+      border-radius: 50%;
+
+      background:
+        conic-gradient(
+          from 0deg,
+          rgba(
+            83,
+            220,
+            176,
+            0.4
+          ),
+          transparent 23%,
+          transparent 100%
+        );
+
+      transform:
+        rotate(0deg);
+    }
+
+
+    .station:hover,
+    .station:focus-visible {
+      transform:
+        translateY(-9px)
+        scale(1.015);
+
+      border-color:
+        var(--cyan);
+
+      background:
+        linear-gradient(
+          145deg,
+          rgba(
+            22,
+            71,
+            105,
+            0.99
+          ),
+          rgba(
+            8,
+            25,
+            41,
+            0.99
+          )
+        );
+
+      box-shadow:
+        0
+        18px
+        42px
+        rgba(
+          0,
+          0,
+          0,
+          0.4
+        ),
+
+        0
+        0
+        28px
+        rgba(
+          112,
+          215,
+          255,
+          0.14
+        );
+    }
+
+
+    .station:hover::before,
+    .station:focus-visible::before {
+      transform:
+        scale(1.1);
+    }
+
+
+    .station:hover::after,
+    .station:focus-visible::after {
+      opacity: 1;
+
+      animation:
+        radarSweep
+        3s
+        linear
+        infinite;
+    }
+
+
+    .station-icon {
+      position: relative;
+      z-index: 3;
+
+      font-size: 2.15rem;
+    }
+
+
+    .station-code {
+      position: relative;
+      z-index: 3;
+
+      margin-top: 18px;
+
+      color: var(--cyan);
+
+      font-size: 0.66rem;
+      font-weight: 900;
+
+      letter-spacing: 2px;
+    }
+
+
+    .station h3 {
+      position: relative;
+      z-index: 3;
+
+      margin:
+        6px
+        0
+        8px;
+
+      font-size: 1.4rem;
+    }
+
+
+    .station p {
+      position: relative;
+      z-index: 3;
+
+      flex-grow: 1;
+
+      margin:
+        0
+        0
+        20px;
+
+      color: var(--muted);
+
+      font-size: 0.9rem;
+    }
+
+
+    .enter {
+      position: relative;
+      z-index: 3;
+
+      color:
+        var(--cyan-bright);
+
+      font-size: 0.74rem;
+      font-weight: 900;
+
+      letter-spacing: 1.3px;
+    }
+
+
+    .arrow {
+      display: inline-block;
+
+      transition:
+        transform
+        0.25s
+        ease;
+    }
+
+
+    .station:hover .arrow,
+    .station:focus-visible .arrow {
+      transform:
+        translateX(9px);
+    }
+
+
+    /* =========================================================
+       METEOROLOGIST RULE
+       ========================================================= */
+
+    .rule {
+      position: relative;
+
+      margin-top: 65px;
+
+      overflow: hidden;
+
+      padding:
+        40px
+        28px;
+
+      text-align: center;
+
+      background:
+        rgba(
+          83,
+          220,
+          176,
+          0.07
+        );
+
+      border:
+        1px solid
+        rgba(
+          83,
+          220,
+          176,
+          0.3
+        );
+
+      border-radius: 15px;
+    }
+
+
+    .rule-label {
+      color: var(--green);
+
+      font-size: 0.72rem;
+      font-weight: 900;
+
+      letter-spacing: 2px;
+    }
+
+
+    .rule blockquote {
+      max-width: 850px;
+
+      margin:
+        12px
+        auto
+        0;
+
+      font-size:
+        clamp(
+          1.35rem,
+          3vw,
+          2rem
+        );
+
+      font-weight: 800;
+
+      line-height: 1.4;
+    }
+
+
+    /* =========================================================
+       FOOTER
+       ========================================================= */
+
+    .footer {
+      display: flex;
+
+      justify-content: space-between;
+
+      gap: 12px;
+
+      flex-wrap: wrap;
+
+      margin-top: 55px;
+
+      padding-top: 20px;
+
+      color: #91a7b8;
+
+      border-top:
+        1px solid
+        rgba(
+          255,
+          255,
+          255,
+          0.12
+        );
+
+      font-size: 0.68rem;
+      font-weight: 700;
+
+      letter-spacing: 1.4px;
+    }
+
+
+    /* =========================================================
+       READING MODE
+       ========================================================= */
+
+    body.reading-mode {
+      font-size: 118%;
+
+      background:
+        #071625;
+    }
+
+
+    body.reading-mode
+    .weather-shell::before {
+      display: none;
+    }
+
+
+    body.reading-mode p {
+      line-height: 1.9;
+    }
+
+
+    body.reading-mode
+    .station,
+
+    body.reading-mode
+    .mission {
+      background:
+        #102f49;
+    }
+
+
+    body.reading-mode
+    .hero h1 {
+      letter-spacing: -2px;
+    }
+
+
+    /* =========================================================
+       PAUSE MOTION
+       ========================================================= */
+
+    body.motion-paused *,
+    body.motion-paused *::before,
+    body.motion-paused *::after {
+      animation-play-state:
+        paused !important;
+
+      transition:
+        none !important;
+    }
+
+
+    /* =========================================================
+       ANIMATIONS
+       ========================================================= */
+
+    @keyframes radarSweep {
+
+      to {
+        transform:
+          rotate(360deg);
+      }
+
+    }
+
+
+    @keyframes alertSweep {
+
+      0% {
+        transform:
+          translateX(-120%);
+      }
+
+      30%,
+      100% {
+        transform:
+          translateX(120%);
+      }
+
+    }
+
+
+    @keyframes statusPulse {
+
+      0%,
+      100% {
+        opacity: 1;
+
+        box-shadow:
+          0
+          0
+          10px
+          var(--green);
+      }
+
+      50% {
+        opacity: 0.45;
+
+        box-shadow:
+          0
+          0
+          3px
+          var(--green);
+      }
+
+    }
+
+
+    /* =========================================================
+       REDUCED MOTION
+       ========================================================= */
+
+    @media
+    (prefers-reduced-motion: reduce) {
+
+      html {
+        scroll-behavior: auto;
+      }
+
+      *,
+      *::before,
+      *::after {
+        animation-duration:
+          0.01ms !important;
+
+        animation-iteration-count:
+          1 !important;
+
+        transition-duration:
+          0.01ms !important;
+      }
+
+      .station:hover,
+      .station:focus-visible,
+      .mission:hover,
+      .control-button:hover {
+        transform: none;
+      }
+
+    }
+
+
+    /* =========================================================
+       TABLET
+       ========================================================= */
+
+    @media
+    (max-width: 900px) {
+
+      .station-grid {
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(0, 1fr)
+          );
+      }
+
+      .mission-track {
+        grid-template-columns:
+          repeat(
+            2,
+            minmax(0, 1fr)
+          );
+      }
+
+      .hero h1 {
+        letter-spacing:
+          -3px;
+      }
+
+    }
+
+
+    /* =========================================================
+       MOBILE
+       ========================================================= */
+
+    @media
+    (max-width: 600px) {
+
+      .weather-lab {
+        padding:
+          22px
+          18px
+          50px;
+      }
+
+      .station-grid,
+      .mission-track {
+        grid-template-columns:
+          1fr;
+      }
+
+      .alert {
+        grid-template-columns:
+          1fr;
+      }
+
+      .hero {
+        min-height: 400px;
+
+        padding:
+          50px
+          0
+          35px;
+      }
+
+      .hero h1 {
+        font-size:
+          clamp(
+            3rem,
+            16vw,
+            4.6rem
+          );
+
+        letter-spacing:
+          -2px;
+      }
+
+      .utility-row {
+        align-items:
+          flex-start;
+      }
+
+      .controls {
+        width: 100%;
+      }
+
+      .control-button {
+        flex: 1;
+      }
+
+    }
+
+  </style>
+</head>
+
+
+<body>
+
+<a
+  class="skip-link"
+  href="#main-content"
+>
+  Skip to main content
+</a>
+
+
+<div class="weather-shell">
+
+
+  <main
+    class="weather-lab"
+    id="main-content"
+  >
+
+
+    <!-- =====================================================
+         STATUS + ACCESSIBILITY
+         ===================================================== -->
+
+    <div class="utility-row">
+
+
+      <div
+        class="status"
+        aria-label="WKMS Weather Research Division station active"
+      >
+
+        WKMS // WEATHER RESEARCH DIVISION
+
+        <span
+          class="status-dot"
+          aria-hidden="true"
+        ></span>
+
+      </div>
+
+
+      <div
+        class="controls"
+        aria-label="Display options"
+      >
+
+
+        <button
+          class="control-button"
+          id="readingMode"
+          type="button"
+          aria-pressed="false"
+        >
+
+          Aa &nbsp; Reading Mode
+
+        </button>
+
+
+        <button
+          class="control-button"
+          id="motionToggle"
+          type="button"
+          aria-pressed="false"
+        >
+
+          ◉ &nbsp; Pause Motion
+
+        </button>
+
+
+      </div>
+
+
+    </div>
+
+
+
+    <!-- =====================================================
+         HERO
+         ===================================================== -->
+
+    <header class="hero">
+
+
+      <div class="eyebrow">
+
+        Meteorological Research Center
+
+      </div>
+
+
+      <h1>
+
+        The Atmospheric<br>
+        Engine
+
+      </h1>
+
+
+      <div class="hero-subtitle">
+
+        Observe. Question. Investigate. Forecast.
+
+      </div>
+
+
+    </header>
+
+
+
+    <!-- =====================================================
+         ACTIVATION ALERT
+         ===================================================== -->
+
+    <section
+      class="alert"
+      aria-labelledby="activation-title"
+    >
+
+
+      <div
+        class="alert-icon"
+        aria-hidden="true"
+      >
+
+        ⚠️
+
+      </div>
+
+
+      <div>
+
+
+        <strong id="activation-title">
+
+          WEATHER TEAM ACTIVATION
+
+        </strong>
+
+
+        <p>
+
+          You have been selected to serve as a meteorologist
+          for the WKMS Weather Team. Your assignment is to
+          investigate South Carolina's atmosphere, analyze
+          the evidence, and develop a forecast your audience
+          can trust.
+
+        </p>
+
+
+      </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         INQUIRY PROCESS
+         ===================================================== -->
+
+    <section
+      aria-labelledby="investigation-heading"
+    >
+
+
+      <div class="section-heading">
+
+
+        <div class="section-code">
+
+          FORECAST PROTOCOL // 01
+
+        </div>
+
+
+        <h2 id="investigation-heading">
+
+          Your Investigation
+
+        </h2>
+
+
+        <p>
+
+          Professional forecasts begin with questions.
+          Follow the evidence through each stage of your
+          investigation.
+
+        </p>
+
+
+      </div>
+
+
+
+      <div class="mission-track">
+
+
+        <article class="mission">
+
+          <div class="mission-number">
+            01
+          </div>
+
+          <h3>
+            OBSERVE
+          </h3>
+
+          <p>
+            Study the atmosphere and notice what is happening.
+          </p>
+
+        </article>
+
+
+
+        <article class="mission">
+
+          <div class="mission-number">
+            02
+          </div>
+
+          <h3>
+            QUESTION
+          </h3>
+
+          <p>
+            Decide what you need to know and develop your inquiry.
+          </p>
+
+        </article>
+
+
+
+        <article class="mission">
+
+          <div class="mission-number">
+            03
+          </div>
+
+          <h3>
+            INVESTIGATE
+          </h3>
+
+          <p>
+            Search trusted resources and collect useful evidence.
+          </p>
+
+        </article>
+
+
+
+        <article class="mission">
+
+          <div class="mission-number">
+            04
+          </div>
+
+          <h3>
+            VERIFY
+          </h3>
+
+          <p>
+            Evaluate your information and compare the evidence.
+          </p>
+
+        </article>
+
+
+
+        <article class="mission">
+
+          <div class="mission-number">
+            05
+          </div>
+
+          <h3>
+            FORECAST
+          </h3>
+
+          <p>
+            Follow the evidence and communicate your prediction.
+          </p>
+
+        </article>
+
+
+      </div>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         RESEARCH STATIONS
+         ===================================================== -->
+
+    <section
+      aria-labelledby="stations-heading"
+    >
+
+
+      <div class="section-heading">
+
+
+        <div class="section-code">
+
+          RESOURCE NETWORK // ONLINE
+
+        </div>
+
+
+        <h2 id="stations-heading">
+
+          Choose Your Research Station
+
+        </h2>
+
+
+        <p>
+
+          Different questions require different tools.
+          Choose the station that matches what you need
+          to learn.
+
+        </p>
+
+
+
+        <div
+          class="format-key"
+          aria-label="Available resource formats"
+        >
+
+
+          <span class="format-tag">
+            📖 Read
+          </span>
+
+
+          <span class="format-tag">
+            🎧 Listen
+          </span>
+
+
+          <span class="format-tag">
+            ▶️ Watch
+          </span>
+
+
+          <span class="format-tag">
+            🗺️ Explore
+          </span>
+
+
+          <span class="format-tag">
+            📊 Analyze Data
+          </span>
+
+
+        </div>
+
+
+      </div>
+
+
+
+      <nav
+        class="station-grid"
+        aria-label="Weather research stations"
+      >
+
+
+
+        <!-- ==========================
+             WEATHER LIBRARY
+             ========================== -->
+
+        <a
+          class="station"
+          href="#"
+          aria-label="Open Weather Library"
+        >
+
+
+          <div
+            class="station-icon"
+            aria-hidden="true"
+          >
+            📚
+          </div>
+
+
+          <div class="station-code">
+
+            STATION 01 // PRINT
+
+          </div>
+
+
+          <h3>
+
+            Weather Library
+
+          </h3>
+
+
+          <p>
+
+            Explore fiction and nonfiction books that
+            build background knowledge and deepen your
+            weather investigation.
+
+          </p>
+
+
+          <span class="enter">
+
+            ENTER LIBRARY
+
+            <span
+              class="arrow"
+              aria-hidden="true"
+            >
+              →
+            </span>
+
+          </span>
+
+
+        </a>
+
+
+
+        <!-- ==========================
+             RESEARCH CENTER
+             ========================== -->
+
+        <a
+          class="station"
+          href="#"
+          aria-label="Open Research Center"
+        >
+
+
+          <div
+            class="station-icon"
+            aria-hidden="true"
+          >
+            🗃️
+          </div>
+
+
+          <div class="station-code">
+
+            STATION 02 // DATABASES
+
+          </div>
+
+
+          <h3>
+
+            Research Center
+
+          </h3>
+
+
+          <p>
+
+            Search librarian-selected databases,
+            encyclopedias, articles, magazines, and
+            research collections.
+
+          </p>
+
+
+          <span class="enter">
+
+            BEGIN RESEARCH
+
+            <span
+              class="arrow"
+              aria-hidden="true"
+            >
+              →
+            </span>
+
+          </span>
+
+
+        </a>
+
+
+
+        <!-- ==========================
+             WEATHER MEDIA
+             ========================== -->
+
+        <a
+          class="station"
+          href="#"
+          aria-label="Open Weather Media"
+        >
+
+
+          <div
+            class="station-icon"
+            aria-hidden="true"
+          >
+            📺
+          </div>
+
+
+          <div class="station-code">
+
+            STATION 03 // MULTIMEDIA
+
+          </div>
+
+
+          <h3>
+
+            Weather Media
+
+          </h3>
+
+
+          <p>
+
+            Watch videos and explore multimedia
+            resources that make atmospheric processes
+            easier to see and understand.
+
+          </p>
+
+
+          <span class="enter">
+
+            VIEW MEDIA
+
+            <span
+              class="arrow"
+              aria-hidden="true"
+            >
+              →
+            </span>
+
+          </span>
+
+
+        </a>
+
+
+
+        <!-- ==========================
+             DATA CENTER
+             ========================== -->
+
+        <a
+          class="station"
+          href="#"
+          aria-label="Open Weather Data Center"
+        >
+
+
+          <div
+            class="station-icon"
+            aria-hidden="true"
+          >
+            🛰️
+          </div>
+
+
+          <div class="station-code">
+
+            STATION 04 // DATA
+
+          </div>
+
+
+          <h3>
+
+            Data Center
+
+          </h3>
+
+
+          <p>
+
+            Explore trusted weather websites, radar,
+            maps, forecasts, scientific information,
+            and real meteorological data.
+
+          </p>
+
+
+          <span class="enter">
+
+            ACCESS DATA
+
+            <span
+              class="arrow"
+              aria-hidden="true"
+            >
+              →
+            </span>
+
+          </span>
+
+
+        </a>
+
+
+
+        <!-- ==========================
+             METEOROLOGIST TOOLKIT
+             ========================== -->
+
+        <a
+          class="station"
+          href="#"
+          aria-label="Open Meteorologist Toolkit"
+        >
+
+
+          <div
+            class="station-icon"
+            aria-hidden="true"
+          >
+            🧰
+          </div>
+
+
+          <div class="station-code">
+
+            STATION 05 // TOOLS
+
+          </div>
+
+
+          <h3>
+
+            Meteorologist's Toolkit
+
+          </h3>
+
+
+          <p>
+
+            Find search strategies, keywords, citation
+            help, vocabulary, technology, and tools for
+            building your forecast.
+
+          </p>
+
+
+          <span class="enter">
+
+            OPEN TOOLKIT
+
+            <span
+              class="arrow"
+              aria-hidden="true"
+            >
+              →
+            </span>
+
+          </span>
+
+
+        </a>
+
+
+
+        <!-- ==========================
+             FIELD STATION
+             ========================== -->
+
+        <a
+          class="station"
+          href="#"
+          aria-label="Open Field Station"
+        >
+
+
+          <div
+            class="station-icon"
+            aria-hidden="true"
+          >
+            📡
+          </div>
+
+
+          <div class="station-code">
+
+            STATION 06 // CONNECTIONS
+
+          </div>
+
+
+          <h3>
+
+            Field Station
+
+          </h3>
+
+
+          <p>
+
+            Connect your investigation to experts,
+            community resources, virtual experiences,
+            and real-world meteorology.
+
+          </p>
+
+
+          <span class="enter">
+
+            EXPLORE CONNECTIONS
+
+            <span
+              class="arrow"
+              aria-hidden="true"
+            >
+              →
+            </span>
+
+          </span>
+
+
+        </a>
+
+
+      </nav>
+
+
+    </section>
+
+
+
+    <!-- =====================================================
+         METEOROLOGIST RULE
+         ===================================================== -->
+
+    <aside class="rule">
+
+
+      <div class="rule-label">
+
+        METEOROLOGIST'S RULE // 01
+
+      </div>
+
+
+      <blockquote>
+
+        A forecast is only as reliable as the
+        evidence behind it.
+
+      </blockquote>
+
+
+    </aside>
+
+
+
+    <!-- =====================================================
+         FOOTER
+         ===================================================== -->
+
+    <footer class="footer">
+
+
+      <span>
+
+        WKMS WEATHER LAB
+
+      </span>
+
+
+      <span>
+
+        6TH GRADE EARTH &amp; SPACE SCIENCE
+
+      </span>
+
+
+    </footer>
+
+
+  </main>
+
+
+</div>
+
+
+
+<script>
+
+  /* =========================================================
+     READING MODE
+     ========================================================= */
+
+  const readingButton =
+    document.getElementById("readingMode");
+
+
+  readingButton.addEventListener(
+    "click",
+    function () {
+
+      const active =
+        document.body.classList.toggle(
+          "reading-mode"
+        );
+
+
+      readingButton.setAttribute(
+        "aria-pressed",
+        active
+      );
+
+
+      readingButton.innerHTML =
+        active
+          ? "Aa &nbsp; Standard View"
+          : "Aa &nbsp; Reading Mode";
+
+    }
+  );
+
+
+
+  /* =========================================================
+     MOTION CONTROL
+     ========================================================= */
+
+  const motionButton =
+    document.getElementById(
+      "motionToggle"
+    );
+
+
+  motionButton.addEventListener(
+    "click",
+    function () {
+
+      const paused =
+        document.body.classList.toggle(
+          "motion-paused"
+        );
+
+
+      motionButton.setAttribute(
+        "aria-pressed",
+        paused
+      );
+
+
+      motionButton.innerHTML =
+        paused
+          ? "▶ &nbsp; Resume Motion"
+          : "◉ &nbsp; Pause Motion";
+
+    }
+  );
+
+</script>
+
+
+</body>
+</html>
